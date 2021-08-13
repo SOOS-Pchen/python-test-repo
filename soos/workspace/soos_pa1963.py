@@ -1051,12 +1051,12 @@ if __name__ == "__main__":
     
     #Run Manifest API first ....
     
-    manifest_api_response = SOOSSupportedManifestAPI.exec(soos_context)
-    if manifest_api_response["status_code"] == 503:
-        print("*** SOOS: Sorry, we are temporarily down for maintenance.")
-        sys.exit(1)
-    else:
-        print("** SOOS: These are the currently accepted manifest file types." + str(manifest_api_response["some_payload"]))
+#     manifest_api_response = SOOSSupportedManifestAPI.exec(soos_context)
+#     if manifest_api_response["status_code"] == 503:
+#         print("*** SOOS: Sorry, we are temporarily down for maintenance.")
+#         sys.exit(1)
+#     else:
+#         print("** SOOS: These are the currently accepted manifest file types." + str(manifest_api_response["some_payload"]))
         
 
     # Initialize SOOS
