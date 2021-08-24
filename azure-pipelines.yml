@@ -1,0 +1,260 @@
+parameters:
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  projectName: ''
+  enableStorybook: false
+  useStaticFileHandler: false
+  staticFileHandlerVersion: '15.3.8-20210818200'
+  packageFeed: '40f39610-99d3-44bb-b611-0c08d0f2293f/f8b0c8d2-53c3-4006-97d0-1d9467989530'
+
+stages:
+  - stage: Build
+    pool:
+      vmImage: 'ubuntu-latest'
+    jobs:
+      - job: SecurityAnalysis
+        displayName: Security Analysis
+        workspace:
+          clean: all
+        steps:
+          - task: SOOS.SOOS-Security-Analysis.scan-task.SOOS@0
+            displayName: 'Start Dev Analysis'
+            continueOnError: true
+            inputs:
+              apiKey: ZTU1ZDY1MGMtZjM0YS00NDFjLWJhMDMtMjIxM2NhNDhlYjRl
+              path: $(Build.SourcesDirectory)
+              clientId: d7dfb7ca7b58f9bf96c11e8b9c881d6eaa0a99dd5bbb9565cb0254ef12f5012f
+              project: ${{parameters.projectName}}
+              baseUri: 'https://dev-api.soos.io/api/'
+              
+          - task: SOOS.SOOS-Security-Analysis.scan-task.SOOS@0
+            displayName: 'Start QA Analysis'
+            continueOnError: true
+            inputs:
+              apiKey: ODc5MDEyMmQtNzYxNy00Y2M0LWEwOWQtZTkzMWE3YTU5M2Uz
+              path: $(Build.SourcesDirectory)
+              clientId: 706d7eb8b0b4e1f5b1169e6e96109015582d8e6d2b5f0ae99c100b80a6d0a428
+              project: ${{parameters.projectName}}
+              baseUri: 'https://qa-api.soos.io/api/'
+              
+          - task: SOOS.SOOS-Security-Analysis.scan-task.SOOS@0
+            displayName: 'Start Prd Analysis'
+            continueOnError: true
+            inputs:
+              apiKey: YjFmMzNlMmEtMDUwZC00MWI2LWJiZTgtMmJlMTQ0ODc5YjQz
+              path: $(Build.SourcesDirectory)
+              clientId: dce234e5f4405bb5d38d4b2cba94bba806abc414b757f401d71ac876370e7316
+              project: ${{parameters.projectName}}
+
+      - job: BuildAndPublish
+        displayName: Verify, Build, and Publish
+        workspace:
+          clean: all
+        steps:
+          # Setup
+          - task: NodeTool@0
+            displayName: 'Use Node 16.x'
+            inputs:
+              versionSpec: '16.x'
+              checkLatest: true
+
+          - task: Cache@2
+            displayName: Use Cached Packages
+            inputs:
+              key: 'npm | "$(Agent.OS)" | **/package-lock.json,!**/node_modules/**,!**/bin/**'
+              restoreKeys: '|
+                npm | "$(Agent.OS)"
+                npm'
+              path: $(System.DefaultWorkingDirectory)/node_modules
+              cacheHitVar: CACHE_RESTORED_NPM
+
+          - task: CmdLine@2
+            displayName: Install Packages
+            condition: and(succeeded(), ne(variables['CACHE_RESTORED_NPM'], 'true'))
+            inputs:
+              script: 'npm ci'
+              workingDirectory: $(System.DefaultWorkingDirectory)
+         
+          # Verify
+          - task: CmdLine@2
+            displayName: Format
+            inputs:
+              script: 'npm run format --if-present'
+              workingDirectory: $(System.DefaultWorkingDirectory)
+         
+          - task: CmdLine@2
+            displayName: Lint
+            inputs:
+              script: 'npm run lint --if-present'
+              workingDirectory: $(System.DefaultWorkingDirectory)
+         
+          - task: CmdLine@2
+            displayName: Type Check
+            inputs:
+              script: 'npm run typecheck --if-present'
+              workingDirectory: $(System.DefaultWorkingDirectory)
+         
+          - task: CmdLine@2
+            displayName: Test
+            inputs:
+              script: 'npm run test --if-present'
+              workingDirectory: $(System.DefaultWorkingDirectory)
+         
+          # Build Artifact
+          - task: CmdLine@2
+            displayName: Build
+            inputs:
+              script: 'npm run build'
+              workingDirectory: $(System.DefaultWorkingDirectory)
+
+          - task: PowerShell@2
+            displayName: 'Get Version Number'
+            inputs:
+              targetType: 'inline'
+              pwsh: true
+              script: |
+                $buildNumber = Get-Content -Path .\buildNumber.txt
+                $branchName = $env:BUILD_SOURCEBRANCHNAME
+                if ($branchName -eq "merge") {
+                  $branchName = $env:SYSTEM_PULLREQUEST_SOURCEBRANCH
+                }
+                $commitId = $env:BUILD_SOURCEVERSION
+                $pipelineBuildNumber = $env:BUILD_BUILDNUMBER
+                # (main)   1.0.0-202101010828+6c1a997         (<MajorMinorPatch>-<PipelineBuildNumber>+<CommitId>)
+                # (branch) 1.0.0-PA901_202101010828+6c1a997   (<MajorMinorPatch>-<BranchName>.<PipelineBuildNumber>+<CommitId>)
+                $commitId = $commitId.Substring(0, 7)
+                $pipelineBuildNumber = $pipelineBuildNumber.Replace('.', '').PadRight(11, '0')
+                $branchName = $branchName.Replace('-', '').Replace("'", "").Replace('_', '').Replace('feature/', '').Replace('fix/', '').Replace('patch/', '').Replace('/', '')
+                $preRelease = $pipelineBuildNumber + '+' + $commitId
+                $appPreRelease = $pipelineBuildNumber
+                If ($branchName -notlike 'master' -and $branchName -notlike 'main'){
+                  $preRelease = $branchName + '.' + $pipelineBuildNumber + '+' + $commitId
+                  $appPreRelease = $branchName + '.' + $pipelineBuildNumber
+                }
+                Write-Host "Package Version:  $buildNumber-$preRelease"
+                Write-Host "Application package Version:  $buildNumber-$appPreRelease"
+                Write-Host "Assembly Version: $buildNumber.$pipelineBuildNumber"
+                Write-Output "##vso[task.setvariable variable=versionNumberPackage]$buildNumber-$preRelease"
+                Write-Output "##vso[task.setvariable variable=versionNumberApplicationPackage]$buildNumber-$appPreRelease"
+                Write-Output "##vso[task.setvariable variable=versionNumberAssembly]$buildNumber"
+          - task: PowerShell@2
+            displayName: 'Set package.json Version'
+            inputs:
+              pwsh: true
+              workingDirectory: $(System.DefaultWorkingDirectory)
+              targetType: 'inline'
+              script: |
+                if (Test-Path -Path "package.json") {
+                  Write-Host "Updating the package.json version to $(versionNumberApplicationPackage)"
+                  $f = Get-Content "package.json" | ConvertFrom-Json
+                  $f.version = "$(versionNumberApplicationPackage)"
+                  $f | ConvertTo-Json -Depth 100 | Out-File -Encoding ASCII "package.json"
+                } else {
+                  Write-Host "No package.json found in current directory."
+                }
+          # Zip Artifacts
+          
+          # No static handler, just zip it up
+          - task: ArchiveFiles@2
+            displayName: Zip Artifact
+            condition: and(eq('${{ parameters.useStaticFileHandler }}', 'false'), or(eq(variables['Build.SourceBranchName'], 'main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/')))
+            inputs:
+              rootFolderOrFile: $(System.DefaultWorkingDirectory)/build
+              archiveFile: $(Build.ArtifactStagingDirectory)/publish_output/${{ parameters.projectName }}.zip
+
+          # Using static handler, download it, put the files in the correct location, then zip it up
+          - task: UniversalPackages@0
+            displayName: Download Static File Handler
+            condition: and(eq('${{ parameters.useStaticFileHandler }}', 'true'), or(eq(variables['Build.SourceBranchName'], 'main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/')))
+            inputs:
+              command: 'download'
+              downloadDirectory: '$(System.DefaultWorkingDirectory)/handler_download'
+              feedsToUse: 'internal'
+              vstsFeed: '${{ parameters.packageFeed }}'
+              vstsFeedPackage: 'packageaware.cloud.azure.functions.staticfilehandler'
+              vstsPackageVersion: '${{ parameters.staticFileHandlerVersion }}'
+              verbosity: 'Debug'
+                        
+          - task: ExtractFiles@1
+            displayName: Extract Static File Handler
+            condition: and(eq('${{ parameters.useStaticFileHandler }}', 'true'), or(eq(variables['Build.SourceBranchName'], 'main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/')))
+            inputs:
+              archiveFilePatterns: '$(System.DefaultWorkingDirectory)/handler_download/*.zip'
+              destinationFolder: '$(System.DefaultWorkingDirectory)/handler_app'
+              cleanDestinationFolder: true
+              overwriteExistingFiles: true'
+              verbosity: 'Debug'
+              
+          - task: CopyFiles@2
+            displayName: Copy build to Handler static Directory
+            condition: and(eq('${{ parameters.useStaticFileHandler }}', 'true'), or(eq(variables['Build.SourceBranchName'], 'main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/')))
+            inputs:
+              SourceFolder: '$(System.DefaultWorkingDirectory)/build'
+              Contents: '**'
+              TargetFolder: '$(System.DefaultWorkingDirectory)/handler_app/static'
+              CleanTargetFolder: true
+              preserveTimestamp: true
+              verbosity: 'Debug'
+              
+          - task: ArchiveFiles@2
+            displayName: Zip Artifact with Handler
+            condition: and(eq('${{ parameters.useStaticFileHandler }}', 'true'), or(eq(variables['Build.SourceBranchName'], 'main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/')))
+            inputs:
+              rootFolderOrFile: '$(System.DefaultWorkingDirectory)/handler_app/'
+              includeRootFolder: false
+              archiveFile: $(Build.ArtifactStagingDirectory)/publish_output/${{ parameters.projectName }}.zip
+
+          # Publish Artifact
+          - task: UniversalPackages@0
+            displayName: Publish Artifact
+            condition: or(eq(variables['Build.SourceBranchName'], 'main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/'))
+            inputs:
+              command: publish
+              publishDirectory: $(Build.ArtifactStagingDirectory)/publish_output/${{ parameters.projectName }}.zip
+              feedsToUsePublish: 'internal'
+              vstsFeedPublish: '${{ parameters.packageFeed }}'
+              vstsFeedPackagePublish: '${{ parameters.projectName }}'
+              versionPublish: '$(versionNumberApplicationPackage)'
+              packagePublishDescription: '${{ parameters.projectName }} Release $(versionNumberApplicationPackage)'
+              versionOption: 'custom'
+
+          # Build And Publish Storybook
+          - task: CmdLine@2
+            displayName: 'Build Storybook'
+            condition: and(eq('${{ parameters.enableStorybook }}', 'true'), or(eq(variables['Build.SourceBranchName'], 'main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/')))
+            inputs:
+              script: 'npm run storybook:build'
+              workingDirectory: $(System.DefaultWorkingDirectory)
+
+          - task: AzurePowerShell@5
+            displayName: 'Publish Storybook'
+            condition: and(eq('${{ parameters.enableStorybook }}', 'true'), or(eq(variables['Build.SourceBranchName'], 'main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/')))
+            inputs:
+              azureSubscription: 'PA_Sup Service Connection'
+              ScriptType: 'InlineScript'
+              Inline: |
+                $ResourceGroupName = "Sup_Storybook"
+                $StorageAccountName = "sup1pa1storybook"
+                $ContainerName = '$web'
+                $DirectoryToCopy = "./storybook-static/"
+                $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
+                $StorageAccountContext = $StorageAccount.Context
+                Get-ChildItem -Path $DirectoryToCopy -File -Recurse | ForEach-Object { 
+                  $ContentType = "text/plain"
+                  If ($_.FullName.EndsWith(".html")) {
+                    $ContentType = "text/html"
+                  } ElseIf ($_.FullName.EndsWith(".js")) {
+                    $ContentType = "text/javascript"
+                  } ElseIf ($_.FullName.EndsWith(".js.map")) {
+                    $ContentType = "application/json"
+                  } ElseIf ($_.FullName.EndsWith(".png")) {
+                    $ContentType = "image/png"
+                  } ElseIf ($_.FullName.EndsWith(".ico")) {
+                    $ContentType = "image/x-icon"
+                  }
+                  Set-AzStorageBlobContent -File $_.FullName -Container $ContainerName -Context $StorageAccountContext -Properties @{ "ContentType" = $ContentType } -Force
+                }
+              errorActionPreference: 'continue'
+              azurePowerShellVersion: 'LatestVersion'
+              pwsh: true
+              workingDirectory: $(System.DefaultWorkingDirectory)       
