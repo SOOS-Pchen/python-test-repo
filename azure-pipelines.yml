@@ -19,24 +19,7 @@ stages:
               project: ${{parameters.projectName}}
               baseUri: 'https://dev-api.soos.io/api/'
               
-          - task: SOOS.SOOS-Security-Analysis.scan-task.SOOS@0
-            displayName: 'Start QA Analysis'
-            continueOnError: true
-            inputs:
-              apiKey: ODc5MDEyMmQtNzYxNy00Y2M0LWEwOWQtZTkzMWE3YTU5M2Uz
-              path: $(Build.SourcesDirectory)
-              clientId: 706d7eb8b0b4e1f5b1169e6e96109015582d8e6d2b5f0ae99c100b80a6d0a428
-              project: ${{parameters.projectName}}
-              baseUri: 'https://qa-api.soos.io/api/'
-              
-          - task: SOOS.SOOS-Security-Analysis.scan-task.SOOS@0
-            displayName: 'Start Prd Analysis'
-            continueOnError: true
-            inputs:
-              apiKey: YjFmMzNlMmEtMDUwZC00MWI2LWJiZTgtMmJlMTQ0ODc5YjQz
-              path: $(Build.SourcesDirectory)
-              clientId: dce234e5f4405bb5d38d4b2cba94bba806abc414b757f401d71ac876370e7316
-              project: ${{parameters.projectName}}
+
 
       - job: BuildAndPublish
         displayName: Verify, Build, and Publish
