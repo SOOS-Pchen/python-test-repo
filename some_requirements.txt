@@ -1,4 +1,4 @@
-adal==0.6.0
+
 asn1crypto==0.24.0
 azure==3.0.0
 azure-batch==4.1.3
