@@ -1,11 +1,3 @@
-parameters:
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
-  projectName: ''
-  enableStorybook: false
-  useStaticFileHandler: false
-  staticFileHandlerVersion: '15.3.8-20210818200'
-  packageFeed: '40f39610-99d3-44bb-b611-0c08d0f2293f/f8b0c8d2-53c3-4006-97d0-1d9467989530'
 
 stages:
   - stage: Build
