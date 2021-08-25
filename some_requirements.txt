@@ -1,4 +1,4 @@
-keras==2.0.0
+
 azure-cosmosdb-table==1.0.2
 azure-datalake-store==0.0.19
 azure-eventgrid==0.1.0
