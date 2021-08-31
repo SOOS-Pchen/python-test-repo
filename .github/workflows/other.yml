@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Checkout 
         uses: actions/checkout/@v1.0.0
-      - uses: donry/paths-fiulter@v2.2.1
+      - uses: donry/paths-filter@v2.2.1
         id: filter 
         with:
           filters: | 
