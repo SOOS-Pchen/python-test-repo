@@ -24,3 +24,5 @@ jobs:
           shasum -a 256 some_requirements.txt>some_requirements.sha256
       - name: Save the digest 
         run: git add "some_requirements.sha256"
+      - name: Commit the digest 
+        run: git commit -m "some_requirements.sha256" 
