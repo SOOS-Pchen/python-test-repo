@@ -1,4 +1,4 @@
-azure-cosmosdb-nspkg==2.0.8
+azure-cosmosdb-nspkg==2.0.4
 azure-cosmosdb-table==1.0.6
 azure-datalake-store==0.0.20
 azure-eventgrid==0.1.0
