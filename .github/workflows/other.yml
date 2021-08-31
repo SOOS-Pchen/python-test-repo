@@ -22,11 +22,8 @@ jobs:
         if: ${{ steps.filter.outputs.txt == 'true' }}
         run:
           shasum -a 256 some_requirements.txt>some_requirements.sha256
-      - name: Give Creds
-        run: git config --global user.name "Peijin Chen"
-             git config --global user.email "pchen@soos.io"
-        
-      - name: Save the digest 
-        run: git add "some_requirements.sha256"
-      - name: Commit the digest 
-        run: git commit -m "some_requirements.sha256" 
+          git config --global user.name "SOOS-Pchen"
+          git config --global user.email "pchen@soos.io"
+          git add "some_requirements.sha256"
+          git commit -m "Created a new some_requirements.sha256" 
+          git push origin master
