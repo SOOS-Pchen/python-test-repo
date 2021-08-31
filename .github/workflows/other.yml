@@ -24,8 +24,6 @@ jobs:
           shasum -a 256 some_requirements.txt>some_requirements.sha256
       - name: Do git stuff 
         run:
-          git config --global user.name "SOOS-Pchen"
-          git config --global user.email pchen@soos.io
           git add .
           git commit -m "Created a new some_requirements.sha256" 
           git status
