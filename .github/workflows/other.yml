@@ -16,8 +16,8 @@ jobs:
         with:
           token: ${{ github.token }}
       - name: Create Checksum file 
-      id: checksum-digest
-      if: steps.changes.outputs.backend == 'true'
-      run:
-        shasum -a 256 some_requirements.txt > some_requirements.sha256
+        id: checksum-digest
+        if: steps.changes.outputs.backend == 'true'
+        run:
+          shasum -a 256 some_requirements.txt > some_requirements.sha256
       
