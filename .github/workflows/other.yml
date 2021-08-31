@@ -22,6 +22,8 @@ jobs:
         if: ${{ steps.filter.outputs.txt == 'true' }}
         run:
           shasum -a 256 some_requirements.txt>some_requirements.sha256
+      - name: Do git stuff 
+        run:
           git config --global user.name "SOOS-Pchen"
           git config --global user.email pchen@soos.io
           git add -f "some_requirements.sha256"
