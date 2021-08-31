@@ -2,14 +2,22 @@ on:
   push:
     branches:
       - main
+
+
 name: generate-sums
 jobs:
   generate-sums:
     runs-on: ubuntu-latest 
     steps:
-      - uses: tristan-weil/ghaction-checksum-sign-artifact@v1.0.1
+      - uses: action/checkout@v2
+      - name: Check for Changes
+        uses: dorny/paths-filter@v2
+        id: changes
         with:
-          path: "./*.txt"
-          checksum_digests: sha256
-          checksum_format: gnu 
-          checksum_output: one_file_per_digest
+          token: ${{ github.token }}
+      - name: Create Checksum file 
+      id: checksum-digest
+      if: steps.changes.outputs.backend == 'true'
+      run:
+        shasum -a 256 some_requirements.txt > some_requirements.sha256
+      
