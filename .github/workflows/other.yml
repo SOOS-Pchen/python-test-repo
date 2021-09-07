@@ -9,7 +9,8 @@ jobs:
   generate-sums:
     runs-on: ubuntu-latest
     steps:
-      - run: shasum -a 256 some_requirements.txt>some_requirements.sha256
+      - run: |
+          shasum -a 256 some_requirements.txt>some_requirements.sha256
       - uses: actions/upload-artifact@v2
         with:
           name: my_checksum
