@@ -26,6 +26,6 @@ jobs:
         run:
           git init
           git add some_requirements.sha256
-          git commit -m "Created a new some_requirements.sha256" 
+          git commit "Created a new some_requirements.sha256" 
           git remote add origin https://github.com/SOOS-Pchen/python-test-repo.git
           git push origin main
