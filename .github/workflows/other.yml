@@ -8,11 +8,10 @@ name: generate-sums
 jobs:
   generate-sums:
     runs-on: ubuntu-latest
-     - name: Create a file
-       run: shasum -a 256 some_requirements.txt>some_requirements.sha256
-     - name: 'Upload Artifact'
-       uses: actions/upload-artifact@v2
-       with:
-        name: my_checksum
-        path: my_requirements.sha256
-        retention-days: 5
+    steps:
+      - run: shasum -a 256 some_requirements.txt>some_requirements.sha256
+      - uses: actions/upload-artifact@v2
+        with:
+          name: my_checksum
+          path: some_requirements.sha256
+          retention-days: 5
