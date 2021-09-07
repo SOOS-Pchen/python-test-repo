@@ -7,24 +7,12 @@ on:
 name: generate-sums
 jobs:
   generate-sums:
-    runs-on: ubuntu-latest 
-    steps:
-#       - name: Checkout 
-#         uses: actions/checkout/@v1.0.0
-#       - uses: dorny/paths-filter@v2.2.1
-#         id: filter 
-#         with:
-#           filters: | 
-#             txt:
-#             - '**/*.txt'
-            
-      - name: Create Digests
-        if: ${{ steps.filter.outputs.txt == 'true' }}
-        run:
-          shasum -a 256 some_requirements.txt>some_requirements.sha256
-      - name: Do git stuff 
-        run:
-          git add .
-
-          git remote add origin
-          git push --set-upstream origin main
+    runs-on: ubuntu-latest
+     - name: 'Create a file'
+       run: echo "I won't live long" > my_file.txt
+     - name: 'Upload Artifact'
+       uses: actions/upload-artifact@v2
+       with:
+        name: my_checksum
+        path: my_requirements.sha256
+        retention-days: 5
