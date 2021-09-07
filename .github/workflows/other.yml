@@ -9,14 +9,14 @@ jobs:
   generate-sums:
     runs-on: ubuntu-latest 
     steps:
-      - name: Checkout 
-        uses: actions/checkout/@v1.0.0
-      - uses: dorny/paths-filter@v2.2.1
-        id: filter 
-        with:
-          filters: | 
-            txt:
-            - '**/*.txt'
+#       - name: Checkout 
+#         uses: actions/checkout/@v1.0.0
+#       - uses: dorny/paths-filter@v2.2.1
+#         id: filter 
+#         with:
+#           filters: | 
+#             txt:
+#             - '**/*.txt'
             
       - name: Create Digests
         if: ${{ steps.filter.outputs.txt == 'true' }}
