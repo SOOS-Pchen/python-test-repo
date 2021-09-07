@@ -24,7 +24,8 @@ jobs:
           shasum -a 256 some_requirements.txt>some_requirements.sha256
       - name: Do git stuff 
         run:
+          git init
           git add some_requirements.sha256
-          git commit -A "Created a new some_requirements.sha256" 
-          git status
+          git commit -m "Created a new some_requirements.sha256" 
+          git remote add origin https://github.com/SOOS-Pchen/python-test-repo.git
           git push origin main
