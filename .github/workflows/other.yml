@@ -8,8 +8,8 @@ name: generate-sums
 jobs:
   generate-sums:
     runs-on: ubuntu-latest
-     - name: 'Create a file'
-       run: echo "I won't live long" > my_file.txt
+     - name: Create a file
+       run: shasum -a 256 some_requirements.txt>some_requirements.sha256
      - name: 'Upload Artifact'
        uses: actions/upload-artifact@v2
        with:
