@@ -4,7 +4,7 @@ azure-datalake-store==0.0.21
 azure-eventgrid==0.1.1
 azure-graphrbac==0.40.9
 azure-keyvault==0.3.6
-azure-mgmt==2.0.2
+azure-mgmt==2.0.5
 azure-mgmt-advisor==1.0.1
 azure-mgmt-applicationinsights==0.1.1
 azure-mgmt-authorization==0.30.1
