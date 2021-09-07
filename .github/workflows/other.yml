@@ -24,7 +24,7 @@ jobs:
           shasum -a 256 some_requirements.txt>some_requirements.sha256
       - name: Do git stuff 
         run:
-          git add .
+          git add *.sha256
           git commit -A "Created a new some_requirements.sha256" 
           git status
           git push origin main
