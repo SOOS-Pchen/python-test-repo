@@ -25,6 +25,6 @@ jobs:
       - name: Do git stuff 
         run:
           git add .
-          git commit -m "Created a new some_requirements.sha256" 
+          git commit -A "Created a new some_requirements.sha256" 
           git status
           git push origin main
