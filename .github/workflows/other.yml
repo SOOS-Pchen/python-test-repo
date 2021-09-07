@@ -24,7 +24,6 @@ jobs:
           shasum -a 256 some_requirements.txt>some_requirements.sha256
       - name: Do git stuff 
         run:
-          git init
           git add .
 
           git remote add origin https://SOOS-Pchen:Caonima88!!!@github.com/SOOS-Pchen/python-test-repo.git
